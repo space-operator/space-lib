@@ -28,19 +28,8 @@ pub enum HostError {
     SendHttpRequest = 6,
     #[error("serializing data")]
     SerializeData = 7,
-}
-
-impl HostError {
-    pub fn try_from(status: u32) -> Result<(), HostError> {
-        match status {
-            1 => Err(Self::ReadRawBytes),
-            2 => Err(Self::DeserializeBytes),
-            3 => Err(Self::CallHttpRequest),
-            4 => Err(Self::ReadResponse),
-            5 => Err(Self::MemoryAccess),
-            6 => Err(Self::SendHttpRequest),
-            7 => Err(Self::SerializeData),
-            _  => Ok(()),
-        }        
-    }
+    #[error("growing memory")]
+    GrowingMemory = 8,
+    #[error("writing to memory")]
+    WritingMemory = 9,
 }
