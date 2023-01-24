@@ -10,7 +10,7 @@ pub fn deserialize<'a, T: Deserialize<'a>>(data: &'a [u8]) -> Result<T, SpaceErr
 }
 
 pub fn extract(status: u64) -> Result<u32, HostError> {
-    match status & 0xFFFF0000 {
+    match status >> 32 {
         1 => Err(HostError::ReadRawBytes),
         2 => Err(HostError::DeserializeBytes),
         3 => Err(HostError::CallHttpRequest),
@@ -20,7 +20,7 @@ pub fn extract(status: u64) -> Result<u32, HostError> {
         7 => Err(HostError::SerializeData),
         8 => Err(HostError::GrowingMemory),
         9 => Err(HostError::WritingMemory),
-        _  => Ok((status & 0xFFFF) as u32),
+        _  => Ok((status & 0xFFFFFFFF) as u32),
     }
 }
 
