@@ -33,6 +33,17 @@
 //! let client = Solana::new("https://api.devnet.solana.com");
 //! let balance = client.get_balance("base58_encoded_pubkey")?;
 //! ```
+//! 
+//! ## Result
+//! 
+//! ```rust
+//! use space_lib::Result;
+//! 
+//! #[no_mangle]
+//! fn main() -> Result<u64> {
+//!     Ok("123".parse()?)
+//! }
+//! ```
 
 pub mod common;
 mod error;
@@ -46,3 +57,22 @@ pub use serde_json::json;
 pub use http::{Request, Response};
 pub use supabase::{Supabase, Builder};
 pub use error::{SpaceError, HostError};
+
+// Error handling compatible with the space runtime
+#[allow(dead_code)]
+#[repr(transparent)]
+pub struct Error(pub String);
+
+impl Error {
+    pub fn new<T: std::fmt::Display>(message: T) -> Self {
+        Self(message.to_string())
+    }
+}
+
+impl<T: std::fmt::Display> From<T> for Error {
+    fn from(message: T) -> Self {
+        Self(message.to_string())
+    }
+}
+
+pub type Result<T, E = Error> = std::result::Result<T, E>;
