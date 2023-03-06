@@ -2,7 +2,7 @@ use crate::{SpaceError, HostError};
 use serde::{Deserialize, Serialize};
 
 pub fn serialize<T: Serialize + ?Sized>(data: &T) -> Result<Vec<u8>, SpaceError> {
-    Ok(rmp_serde::to_vec(data)?)
+    Ok(rmp_serde::to_vec_named(data)?)
 }
 
 pub fn deserialize<'a, T: Deserialize<'a>>(data: &'a [u8]) -> Result<T, SpaceError> {

@@ -1,5 +1,43 @@
-//! This crate provides WebAssembly host functions for Space Operator.
+//! This crate provides WebAssembly host functions and other utilities for Space Operator.
 //! 
+//! ## Macro
+//! 
+//! ```rust
+//! use space_lib::space;
+//! use serde::{Serialize, Deserialize};
+//! 
+//! #[derive(Deserialize)]
+//! struct Input {
+//!     value: usize,
+//!     name: String,
+//! }
+//! 
+//! #[derive(Serialize)]
+//! struct Output {
+//!     value: usize,
+//!     name: String,
+//! }
+//! 
+//! #[space]
+//! fn main(input: Input) -> Output {
+//!     Output {
+//!         value: input.value * 2,
+//!         name: input.name.chars().rev().collect(),
+//!     }
+//! }
+//! ```
+//!
+//! ## Result
+//! 
+//! ```rust
+//! use space_lib::{space, Result};
+//! 
+//! #[space]
+//! fn main() -> Result<u64> {
+//!     Ok("123".parse()?)
+//! }
+//! ```
+//!
 //! ## HTTP client
 //! 
 //! ```rust
@@ -33,17 +71,6 @@
 //! let client = Solana::new("https://api.devnet.solana.com");
 //! let balance = client.get_balance("base58_encoded_pubkey")?;
 //! ```
-//! 
-//! ## Result
-//! 
-//! ```rust
-//! use space_lib::Result;
-//! 
-//! #[no_mangle]
-//! fn main() -> Result<u64> {
-//!     Ok("123".parse()?)
-//! }
-//! ```
 
 pub mod common;
 mod error;
@@ -57,6 +84,15 @@ pub use serde_json::json;
 pub use http::{Request, Response};
 pub use supabase::{Supabase, Builder};
 pub use error::{SpaceError, HostError};
+
+// Macro
+pub use space_macro::space;
+
+#[repr(C)]
+pub struct SpaceSlice {
+    pub len: usize,
+    pub ptr: *mut u8,
+}
 
 // Error handling compatible with the space runtime
 #[allow(dead_code)]
