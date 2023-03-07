@@ -10,4 +10,4 @@ description = "WebAssembly host functions for Space Operator"
 [dependencies]
 rmp-serde = "1.1"
 serde = { version = "1.0", features = ["derive"] }
-space-macro = { path = "./space-macro", version = "0.1.0" }
+space-macro = { path = "../space-macro", version = "0.1.0" }
