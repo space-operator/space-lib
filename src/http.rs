@@ -72,7 +72,17 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn into_slice(self) -> Vec<u8> {
+    pub fn into_vec(self) -> Vec<u8> {
         self.bytes
+    }
+
+    pub fn into_string(self) -> Result<String> {
+        Ok(std::str::from_utf8(&self.bytes).map(|it| it.to_string())?)
+    }
+
+    #[cfg(feature = "json")]
+    pub fn into_json<T: serde::de::DeserializeOwned>(self) -> Result<T> {
+        let json = std::str::from_utf8(&self.bytes)?;
+        Ok(serde_json::from_str(json)?)
     }
 }

@@ -3,11 +3,11 @@ use crate::{
     Result,
 };
 
-extern {
+extern "C" {
     fn http_call_request(bytes: u32, bytes_len: u32) -> u64;
 }
 
-/// Calls http request, then returns length of body
+/// Calls http request, then returns body
 pub fn call_request(
     url: String,
     headers: Vec<String>,
