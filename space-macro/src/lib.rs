@@ -1,5 +1,5 @@
-use quote::quote;
 use proc_macro::TokenStream;
+use quote::{format_ident, quote};
 use syn::{Error, FnArg, ItemFn, PatType};
 
 #[proc_macro_attribute]
@@ -7,33 +7,31 @@ pub fn space(_: TokenStream, input: TokenStream) -> TokenStream {
     // Parse ast from token stream
     let ast = syn::parse::<ItemFn>(input).expect("Place this attribute above a function");
 
-    // Signature
+    // Signature and output type
     let name = ast.sig.ident;
-    let input = match ast.sig.inputs.first() {
+    let output = ast.sig.output;
+    let stub_name = format_ident!("{name}_stub");
+
+    // Stub
+    let body = ast.block.stmts;
+    let stub = match ast.sig.inputs.first() {
         Some(FnArg::Typed(PatType { pat, ty, .. })) => quote! {
             let #pat = ::space_lib::common::deserialize::<#ty>(__input_bytes).unwrap();
+
+            // Actual code
+            fn #stub_name(#pat: #ty) #output {
+                #(#body);*
+            }
+            let output = #stub_name(#pat);
+
+            // Serialize output
+            let __output_bytes = ::space_lib::common::serialize(&output).unwrap().leak();
+            ::std::boxed::Box::new(::space_lib::SpaceSlice {
+                len: __output_bytes.len(),
+                ptr: __output_bytes.as_mut_ptr(),
+            })
         },
         _ => Error::new(name.span(), "expected one argument").to_compile_error(),
-    };
-
-    // Body
-    let body = match ast.block.stmts.as_slice() {
-        [head @ .., tail] => {
-            let head = head.iter();
-            quote! {
-                #(#head);*
-
-                let output = #tail;
-
-                // Serialize output
-                let __output_bytes = ::space_lib::common::serialize(&output).unwrap().leak();
-                ::std::boxed::Box::new(::space_lib::SpaceSlice {
-                    len: __output_bytes.len(),
-                    ptr: __output_bytes.as_mut_ptr(),
-                })
-            }
-        }
-        _ => Error::new(name.span(), "body is empty").to_compile_error(),
     };
 
     quote! {
@@ -46,9 +44,8 @@ pub fn space(_: TokenStream, input: TokenStream) -> TokenStream {
                 ::std::slice::from_raw_parts(data, len)
             };
 
-            #input
-
-            #body
+            #stub
         }
-    }.into()
+    }
+    .into()
 }

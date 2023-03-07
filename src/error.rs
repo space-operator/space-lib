@@ -1,35 +1,36 @@
-use thiserror::Error;
+use serde::{Serialize, Deserialize};
 
-#[derive(Error, Debug)]
-pub enum SpaceError {
-    #[error("utf8 error occured: `{0}`")]
-    Utf8(#[from] std::str::Utf8Error),
-    #[error("json error occured: `{0}`")]
-    Json(#[from] serde_json::Error),
-    #[error("message pack serializing error: `{0}`")]
-    RmpSerialize(#[from] rmp_serde::encode::Error),
-    #[error("message pack deserializing error: `{0}`")]
-    RmpDeserialize(#[from] rmp_serde::decode::Error),
+// Error type
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Error {
+    description: String,
+    source: Option<Box<Error>>,
 }
 
-#[derive(Error, Debug)]
-pub enum HostError {
-    #[error("reading raw bytes from guest")]
-    ReadRawBytes = 1,
-    #[error("trying to deserialize raw bytes")]
-    DeserializeBytes = 2,
-    #[error("calling http request")]
-    CallHttpRequest = 3,
-    #[error("reading http response")]
-    ReadResponse = 4,
-    #[error("accessing web assembly memory")]
-    MemoryAccess = 5,
-    #[error("sending http request with body")]
-    SendHttpRequest = 6,
-    #[error("serializing data")]
-    SerializeData = 7,
-    #[error("growing memory")]
-    GrowingMemory = 8,
-    #[error("writing to memory")]
-    WritingMemory = 9,
+impl Error {
+    pub fn new<T: std::fmt::Display>(message: T) -> Self {
+        Self {
+            description: message.to_string(),
+            source: None,
+        }
+    }
 }
+
+impl std::error::Error for Error {
+    fn source(&self) -> Option<&(dyn 'static + std::error::Error)> {
+        self.source.as_ref().map(|s| &**s as &(dyn 'static + std::error::Error))
+    }
+
+    fn description(&self) -> &str {
+        &self.description
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.description)
+    }
+}
+
+// Result type
+pub type Result<T, E = Error> = std::result::Result<T, E>;

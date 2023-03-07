@@ -3,7 +3,7 @@
 //! ## Macro
 //! 
 //! ```rust
-//! use space_lib::space;
+//! use space_lib::{space, Result};
 //! use serde::{Serialize, Deserialize};
 //! 
 //! #[derive(Deserialize)]
@@ -19,22 +19,12 @@
 //! }
 //! 
 //! #[space]
-//! fn main(input: Input) -> Output {
-//!     Output {
+//! fn main(input: Input) -> Result<Output> {
+//!     let output = Output {
 //!         value: input.value * 2,
 //!         name: input.name.chars().rev().collect(),
-//!     }
-//! }
-//! ```
-//!
-//! ## Result
-//! 
-//! ```rust
-//! use space_lib::{space, Result};
-//! 
-//! #[space]
-//! fn main() -> Result<u64> {
-//!     Ok("123".parse()?)
+//!     };
+//!     Ok(output)
 //! }
 //! ```
 //!
@@ -47,43 +37,16 @@
 //!     .call()?
 //!     .into_string()?;
 //! ```
-//! 
-//! ## Supabase
-//! 
-//! ```rust
-//! use space_lib::Supabase;
-//! 
-//! let client = Supabase::new("https://hyjbiblkjrrvkzaqsyxe.supabase.co")
-//!     .insert_header("apikey", "anon_api_key");
-//! 
-//! let rows = client
-//!     .from("dogs")
-//!     .select("name")
-//!     .execute()?
-//!     .into_string()?;
-//! ```
-//! 
-//! ## Solana
-//! 
-//! ```rust
-//! use space_lib::Solana;
-//! 
-//! let client = Solana::new("https://api.devnet.solana.com");
-//! let balance = client.get_balance("base58_encoded_pubkey")?;
-//! ```
 
+// Modules
 pub mod common;
 mod error;
 mod ffi;
 mod http;
-mod solana;
-mod supabase;
 
-pub use solana::Solana;
-pub use serde_json::json;
+// Exports
+pub use error::{Error, Result};
 pub use http::{Request, Response};
-pub use supabase::{Supabase, Builder};
-pub use error::{SpaceError, HostError};
 
 // Macro
 pub use space_macro::space;
@@ -93,22 +56,3 @@ pub struct SpaceSlice {
     pub len: usize,
     pub ptr: *mut u8,
 }
-
-// Error handling compatible with the space runtime
-#[allow(dead_code)]
-#[repr(transparent)]
-pub struct Error(pub String);
-
-impl Error {
-    pub fn new<T: std::fmt::Display>(message: T) -> Self {
-        Self(message.to_string())
-    }
-}
-
-impl<T: std::fmt::Display> From<T> for Error {
-    fn from(message: T) -> Self {
-        Self(message.to_string())
-    }
-}
-
-pub type Result<T, E = Error> = std::result::Result<T, E>;

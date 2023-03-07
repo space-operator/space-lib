@@ -1,4 +1,4 @@
-use crate::{common::Method, error::HostError, ffi, SpaceError};
+use crate::{common::Method, ffi, Result};
 
 pub struct Request {
     url: String,
@@ -60,44 +60,8 @@ impl Request {
         self
     }
 
-    /// Send bytes with request.
-    pub fn send_bytes<T: Into<Vec<u8>>>(self, data: T) -> Result<Response, HostError> {
-        let bytes = ffi::send_bytes(
-            self.url,
-            self.headers,
-            self.queries,
-            self.method,
-            data.into(),
-        )?;
-        Ok(Response { bytes })
-    }
-
-    /// Send string with request.
-    pub fn send_string<T: Into<String>>(self, data: T) -> Result<Response, HostError> {
-        let bytes = ffi::send_string(
-            self.url,
-            self.headers,
-            self.queries,
-            self.method,
-            data.into(),
-        )?;
-        Ok(Response { bytes })
-    }
-
-    /// Send form with request.
-    pub fn send_form(self, data: Vec<(String, String)>) -> Result<Response, HostError> {
-        let bytes = ffi::send_form(self.url, self.headers, self.queries, self.method, data)?;
-        Ok(Response { bytes })
-    }
-
-    /// Send json with request.
-    pub fn send_json(self, data: impl serde::Serialize) -> Result<Response, HostError> {
-        let bytes = ffi::send_json(self.url, self.headers, self.queries, self.method, &data)?;
-        Ok(Response { bytes })
-    }
-
     /// Send the request.
-    pub fn call(self) -> Result<Response, HostError> {
+    pub fn call(self) -> Result<Response> {
         let bytes = ffi::call_request(self.url, self.headers, self.queries, self.method)?;
         Ok(Response { bytes })
     }
@@ -108,16 +72,7 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn into_vec(self) -> Vec<u8> {
+    pub fn into_slice(self) -> Vec<u8> {
         self.bytes
-    }
-
-    pub fn into_string(self) -> Result<String, SpaceError> {
-        Ok(std::str::from_utf8(&self.bytes).map(|it| it.to_string())?)
-    }
-
-    pub fn into_json<T: serde::de::DeserializeOwned>(self) -> Result<T, SpaceError> {
-        let json = std::str::from_utf8(&self.bytes)?;
-        Ok(serde_json::from_str(json)?)
     }
 }

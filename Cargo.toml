@@ -8,8 +8,6 @@ documentation = "https://docs.rs/space-lib"
 description = "WebAssembly host functions for Space Operator"
 
 [dependencies]
-thiserror = "1.0"
 rmp-serde = "1.1"
-serde_json = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 space-macro = { path = "./space-macro", version = "0.1.0" }
